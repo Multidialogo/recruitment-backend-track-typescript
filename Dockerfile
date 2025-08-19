@@ -14,7 +14,7 @@ COPY package*.json ./
 RUN npm  install
 COPY . .
 EXPOSE 3000
-CMD ["npx", "run", "dev"]
+CMD ["npm", "run", "dev"]
 
 # Section production
 FROM node:20-alpine AS production

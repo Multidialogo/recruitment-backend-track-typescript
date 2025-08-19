@@ -29,7 +29,7 @@
     "@types/node": "^24.1.0"
   },
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpileOnly src/server.ts",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   }
