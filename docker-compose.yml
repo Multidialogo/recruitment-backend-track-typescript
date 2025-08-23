@@ -1,0 +1,55 @@
+version: "3.9"
+
+services:
+  backend-node:
+    build:
+      context: .
+      target: ${BUILD_TARGET:-development}   # scegli: development o production
+    container_name: backend-node
+    volumes:
+      - .:/app           # solo in dev per hot-reload
+      - /app/node_module
+    ports:
+      - "3000:3000"    
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - db
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    depends_on:
+      - db
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+  db:
+    image: postgres:13
+    container_name: db-postgres
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: invoice-management
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: always
+
+
+  nginx:
+    build:
+      context: .
+    container_name: nginx
+    depends_on:
+      - backend-node
+    ports:
+      - "8080:80" 
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    restart: always
+
+volumes:
+  dbdata:
