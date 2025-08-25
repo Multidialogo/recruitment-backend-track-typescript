@@ -3,7 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import fs from "fs";
 import path from "path";
 import YAML from "yaml";
-import OpenApiValidator from "express-openapi-validator";
+import * as OpenApiValidator from "express-openapi-validator";
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -12,12 +12,12 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 
-const SPEC_PATH = path.join(process.cwd(), "openapi", "invoice-management-v1.yaml");
+const SPEC_PATH = path.join(process.cwd(), "./openapi", "/invoice-management-v1.yaml");
 const specText = fs.readFileSync(SPEC_PATH, "utf8");
 const openapiDoc = YAML.parse(specText);
 
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDoc, { explorer: true }));
-app.get("/docs.json", (_req, res) => res.json(openapiDoc));
+app.use("/swagger-ui", swaggerUi.serve, swaggerUi.setup(openapiDoc, { explorer: true }));
+app.get("/swagger-ui.json", (_req, res) => res.json(openapiDoc));
 
 app.use(
   OpenApiValidator.middleware({
@@ -39,6 +39,6 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 
 app.listen(port, () => {
   console.log(`API ready:    http://localhost:${port}`);
-  console.log(`Swagger UI:   http://localhost:${port}/docs`);
-  console.log(`OpenAPI JSON: http://localhost:${port}/docs.json`);
+  console.log(`Swagger UI:   http://localhost:${port}/swagger-ui`);
+  console.log(`OpenAPI JSON: http://localhost:${port}/swagger-ui.json`);
 });
