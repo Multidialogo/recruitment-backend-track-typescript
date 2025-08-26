@@ -1,0 +1,649 @@
+openapi: 3.0.3
+info:
+  title: Invoice Management API
+  version: 1.1.0
+  description: >
+    Spec-first per Users, Invoices, Tax Profiles, con pagination/filtri avanzati,
+    errori Problem Details e sicurezza (JWT bearer + API Key).
+
+servers:
+  - url: /api
+
+tags:
+  - name: Auth
+  - name: Users
+  - name: Invoices
+  - name: TaxProfiles
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registra un nuovo utente
+      description: >
+        Crea un utente. La password sarà **hashata con bcrypt** lato server
+        (non salvare mai password in chiaro).
+      security: []   # pubblica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        "201":
+          description: Utente creato
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthUser' }
+        "409": { $ref: '#/components/responses/Conflict' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Effettua il login (JWT)
+      security: []   # pubblica
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        "200":
+          description: Login ok
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh del token di accesso
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshRequest' }
+      responses:
+        "200":
+          description: Nuovo access token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+
+  /users:
+    get:
+      tags: [Users]
+      operationId: getUsers
+      summary: restituisce una lista di utenti, è possibile filtrare e paginare
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/sort'
+        - name: email
+          in: query
+          schema: { type: string, format: email }
+          description: Filtra per email esatta
+        - name: role
+          in: query
+          schema: { $ref: '#/components/schemas/UserRole' }
+        - name: isEnabled
+          in: query
+          schema: { type: boolean }
+        - name: q
+          in: query
+          schema: { type: string }
+          description: Ricerca full-text su nome/cognome/email
+      responses:
+        "200":
+          description: Lista utenti
+          headers:
+            X-Total-Count:
+              schema: { type: integer }
+              description: Totale elementi senza pagination
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedUsers' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Crea un nuovo utente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserCreateRequest' }
+      responses:
+        "201":
+          description: Nuovo utente creato con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedId' }
+        "409": { $ref: '#/components/responses/Conflict' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+
+  /users/{id}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Users]
+      operationId: updateUser
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserUpdateRequest' }
+      responses:
+        "200":
+          description: Utente aggiornato con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Users]
+      operationId: deleteUser
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      responses:
+        "204": { description: Utente cancellato con successo }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  /invoices:
+    get:
+      tags: [Invoices]
+      operationId: getInvoices
+      summary: restituisce una lista  di fatture (paginata, filtrabile)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/sort'
+        - name: customerId
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/InvoiceStatus' }
+        - name: dateFrom
+          in: query
+          schema: { type: string, format: date-time }
+          description: Filtro per data emissione (>=)
+        - name: dateTo
+          in: query
+          schema: { type: string, format: date-time }
+          description: Filtro per data emissione (<=)
+        - name: code
+          in: query
+          schema: { type: string }
+          description: Ricerca per codice fattura (contains/exact a scelta server)
+        - name: amountMin
+          in: query
+          schema: { type: string }
+          description: Importo minimo (grandTotal) come string/decimal
+        - name: amountMax
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista fatture
+          headers:
+            X-Total-Count:
+              schema: { type: integer }
+              description: Totale elementi senza pagination
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedInvoices' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+    post:
+      tags: [Invoices]
+      operationId: createInvoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InvoiceCreateRequest' }
+      responses:
+        "201":
+          description: Creata nuova fattura con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedId' }
+
+  /invoices/{id}:
+    get:
+      tags: [Invoices]
+      operationId: getInvoice
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoiceResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [Invoices]
+      operationId: updateInvoice
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InvoiceUpdateRequest' }
+      responses:
+        "200":
+          description: Aggiornata fattura con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoiceResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Invoices]
+      operationId: deleteInvoice
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      responses:
+        "204": { description: Cancellata fattura con successo }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+  /user-tax-profiles:
+    get:
+      tags: [TaxProfiles]
+      operationId: listUserTaxProfiles
+      summary: restituisce una lista profili fiscali utente (paginata, filtrabile)
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+        - $ref: '#/components/parameters/sort'
+        - name: userId
+          in: query
+          schema: { type: string }
+        - name: type
+          in: query
+          schema: { $ref: '#/components/schemas/TaxType' }
+        - name: isActive
+          in: query
+          schema: { type: boolean }
+        - name: city
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: Lista di profili fiscali utente
+          headers:
+            X-Total-Count:
+              schema: { type: integer }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PaginatedUserTaxProfiles' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+    post:
+      tags: [TaxProfiles]
+      operationId: createUserTaxProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserTaxProfileCreateRequest' }
+      responses:
+        "201":
+          description: Profilo fiscale utente creato
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedId' }
+
+  /user-tax-profiles/{id}:
+    get:
+      tags: [TaxProfiles]
+      summary: restituisce un profilo fiscale utente, per id
+      operationId: getUserTaxProfile
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserTaxProfileResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
+      tags: [TaxProfiles]
+      operationId: updateUserTaxProfile
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserTaxProfileUpdateRequest' }
+      responses:
+        "200":
+          description: Aggiornato profilo fiscale utente con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserTaxProfileResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [TaxProfiles]
+      operationId: deleteUserTaxProfile
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      responses:
+        "204": { description: Cancellato profilo fiscale utente con successo }
+        "404": { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Invia `Authorization: Bearer <token>`. (RFC 6750)
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Chiave API per integrazioni server-to-server.
+
+  parameters:
+    id:
+      in: path
+      name: id
+      required: true
+      description: Identificatore risorsa (UUID)
+      schema:
+        type: string
+        format: uuid
+    page:
+      in: query
+      name: page
+      schema: { type: integer, minimum: 1, default: 1 }
+    pageSize:
+      in: query
+      name: pageSize
+      schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
+    sort:
+      in: query
+      name: sort
+      description: >
+        Ordinamento, es. `createdAt:desc,code:asc`. Implementazione a discrezione del server.
+      schema: { type: string }
+
+  responses:
+    BadRequest:
+      description: Richiesta non valida
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Unauthorized:
+      description: Non autenticato o token invalido
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Forbidden:
+      description: Autenticato ma non autorizzato
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    NotFound:
+      description: Risorsa non trovata
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+    Conflict:
+      description: Conflitto (es. email duplicata)
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/ProblemDetails' }
+
+  schemas:
+    ProblemDetails:
+      type: object
+      required: [title, status]
+      properties:
+        type: { type: string, format: uri, example: "https://api.example.com/errors/validation" }
+        title: { type: string, example: "Bad Request" }
+        status: { type: integer, example: 400 }
+        detail: { type: string, example: "Parametro 'page' deve essere >= 1" }
+        instance: { type: string, example: "/users?page=0" }
+
+    # Auth
+    RegisterRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: >
+            Sarà hashata con bcrypt lato server (salting + work factor adeguato).
+        firstName: { type: string }
+        lastName: { type: string }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken: { type: string }
+    AuthUser:
+      type: object
+      properties:
+        user: { $ref: '#/components/schemas/UserResponse' }
+        accessToken: { type: string }
+        refreshToken: { type: string }
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, example: 3600 }
+
+    # Users
+    UserResponse:
+      type: object
+      required: [id, firstName, lastName, email, role, isEnabled, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        role: { $ref: '#/components/schemas/UserRole' }
+        isEnabled: { type: boolean, default: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    UserCreateRequest:
+      type: object
+      required: [firstName, lastName, role, email]
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        role: { $ref: '#/components/schemas/UserRole' }
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        firstName: { type: string }
+        lastName: { type: string }
+        role: { $ref: '#/components/schemas/UserRole' }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
+        isEnabled: { type: boolean }
+
+    UserRole:
+      type: string
+      enum: [USER, ADMIN]
+
+    # Invoices
+    InvoiceResponse:
+      type: object
+      required: [code, issueDate, currency, customerId, billToCustomerTaxProfileId, status, subtotal, taxTotal, grandTotal, paymentMethod]
+      properties:
+        code: { type: string }
+        issueDate: { type: string, format: date-time }
+        dueDate: { type: string, format: date-time, nullable: true }
+        currency: { type: string, example: "EUR" }
+        customerId: { type: string }
+        billToCustomerTaxProfileId: { type: string, nullable: true }
+        shipToCustomerTaxProfileId: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/InvoiceStatus' }
+        subtotal: { type: string, example: "100.00" }
+        taxTotal: { type: string, example: "22.00" }
+        grandTotal: { type: string, example: "122.00" }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    InvoiceCreateRequest:
+      type: object
+      required: [code, issueDate, currency, customerId, subtotal, taxTotal, grandTotal]
+      properties:
+        code: { type: string }
+        issueDate: { type: string, format: date-time }
+        dueDate: { type: string, format: date-time, nullable: true }
+        currency: { type: string }
+        customerId: { type: string }
+        billToCustomerTaxProfileId: { type: string, nullable: true }
+        shipToCustomerTaxProfileId: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/InvoiceStatus' }
+        subtotal: { type: string }
+        taxTotal: { type: string }
+        grandTotal: { type: string }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
+
+    InvoiceUpdateRequest:
+      type: object
+      properties:
+        issueDate: { type: string, format: date-time }
+        dueDate: { type: string, format: date-time, nullable: true }
+        currency: { type: string }
+        customerId: { type: string }
+        billToCustomerTaxProfileId: { type: string, nullable: true }
+        shipToCustomerTaxProfileId: { type: string, nullable: true }
+        status: { $ref: '#/components/schemas/InvoiceStatus' }
+        subtotal: { type: string }
+        taxTotal: { type: string }
+        grandTotal: { type: string }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
+
+    InvoiceStatus:
+      type: string
+      enum: [DRAFT, SENT, PAID, OVERDUE, CANCELED]
+
+    PaymentMethod:
+      type: string
+      enum: [CARD, BANK_TRANSFER, CASH, OTHER]
+
+    # Tax Profiles
+    TaxType:
+      type: string
+      enum: [INDIVIDUAL, FREELANCER, COMPANY, FOREIGN_EU, FOREIGN_NON_EU]
+
+    TaxProfileBase:
+      type: object
+      required: [type, legalName, fiscalCode, addressLine1, city, postalCode, countryCode]
+      properties:
+        type: { $ref: '#/components/schemas/TaxType' }
+        legalName: { type: string }
+        fiscalCode: { type: string }
+        vatNumber: { type: string, nullable: true }
+        addressLine1: { type: string }
+        addressLine2: { type: string, nullable: true }
+        city: { type: string }
+        province: { type: string, nullable: true }
+        postalCode: { type: string }
+        countryCode: { type: string, example: "IT" }
+
+    UserTaxProfileResponse:
+      allOf:
+        - $ref: '#/components/schemas/TaxProfileBase'
+        - type: object
+          required: [userId]
+          properties:
+            userId: { type: string }
+            createdAt: { type: string, format: date-time }
+            updatedAt: { type: string, format: date-time }
+
+    UserTaxProfileCreateRequest:
+      allOf:
+        - $ref: '#/components/schemas/TaxProfileBase'
+        - type: object
+          required: [userId]
+          properties:
+            userId: { type: string }
+
+    # Update ridichiarato come oggetto "flat" con tutti i campi opzionali
+    UserTaxProfileUpdateRequest:
+      type: object
+      properties:
+        type: { $ref: '#/components/schemas/TaxType' }
+        legalName: { type: string }
+        fiscalCode: { type: string }
+        vatNumber: { type: string, nullable: true }
+        addressLine1: { type: string }
+        addressLine2: { type: string, nullable: true }
+        city: { type: string }
+        province: { type: string, nullable: true }
+        postalCode: { type: string }
+        countryCode: { type: string, example: "IT" }
+
+    # Risposte paginated
+    PaginatedUsers:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/UserResponse' } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    PaginatedInvoices:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/InvoiceResponse' } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    PaginatedUserTaxProfiles:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: '#/components/schemas/UserTaxProfileResponse' } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    # Schema riutilizzabile per 201 che ritornano solo l'id
+    CreatedId:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
