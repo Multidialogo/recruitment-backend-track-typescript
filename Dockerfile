@@ -11,7 +11,7 @@ RUN npm run build
 FROM node:20 AS development
 WORKDIR /app
 COPY package*.json ./
-RUN npm  ci
+RUN npm  install
 COPY . .
 
 # copia l'entrypoint fuori da /app per evitare che il bind-mount lo sovrascriva
