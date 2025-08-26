@@ -1,9 +1,9 @@
 .env
 /src/generated/prisma
-/dist
-node_module
+/dist/
+node_module/
 node_modules/
 /src/api/*
-package-lock.json
+/package-lock.json
 .dockerignore
 
