@@ -34,14 +34,13 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/RegisterRequest' }
       responses:
-        '201':
+        "201":
           description: Utente creato
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AuthUser' }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        "409": { $ref: '#/components/responses/Conflict' }
+        "400": { $ref: '#/components/responses/BadRequest' }
 
   /auth/login:
     post:
@@ -54,13 +53,13 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/LoginRequest' }
       responses:
-        '200':
+        "200":
           description: Login ok
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoginResponse' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "400": { $ref: '#/components/responses/BadRequest' }
 
   /auth/refresh:
     post:
@@ -73,17 +72,17 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/RefreshRequest' }
       responses:
-        '200':
+        "200":
           description: Nuovo access token
           content:
             application/json:
               schema: { $ref: '#/components/schemas/LoginResponse' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
 
   /users:
     get:
       tags: [Users]
-      operationId: listUsers
+      operationId: getUsers
       summary: restituisce una lista di utenti, è possibile filtrare e paginare
       parameters:
         - $ref: '#/components/parameters/page'
@@ -102,9 +101,9 @@ paths:
         - name: q
           in: query
           schema: { type: string }
-          description: Ricerca full-text su nome/cognome/email (se supportata)
+          description: Ricerca full-text su nome/cognome/email
       responses:
-        '200':
+        "200":
           description: Lista utenti
           headers:
             X-Total-Count:
@@ -113,21 +112,24 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaginatedUsers' }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: '#/components/responses/BadRequest' }
     post:
       tags: [Users]
       operationId: createUser
-      summary: Inserisce un nuovo utente
+      summary: Crea un nuovo utente
       requestBody:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UserCreate' }
+            schema: { $ref: '#/components/schemas/UserCreateRequest' }
       responses:
-        '201': { description: Nuovo utente inserito, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
-        '409': { $ref: '#/components/responses/Conflict' }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '422': { $ref: '#/components/responses/UnprocessableEntity' }
+        "201":
+          description: Nuovo utente creato con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedId' }
+        "409": { $ref: '#/components/responses/Conflict' }
+        "400": { $ref: '#/components/responses/BadRequest' }
 
   /users/{id}:
     get:
@@ -135,8 +137,12 @@ paths:
       operationId: getUser
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
     put:
       tags: [Users]
       operationId: updateUser
@@ -145,24 +151,26 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UserUpdate' }
+            schema: { $ref: '#/components/schemas/UserUpdateRequest' }
       responses:
-        '200': { description: Utente aggiornato, content: { application/json: { schema: { $ref: '#/components/schemas/User' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "200":
+          description: Utente aggiornato con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
     delete:
       tags: [Users]
       operationId: deleteUser
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
-        '204': { description: Cancellato }
-        '404': { $ref: '#/components/responses/NotFound' }
-
-  
+        "204": { description: Utente cancellato con successo }
+        "404": { $ref: '#/components/responses/NotFound' }
 
   /invoices:
     get:
       tags: [Invoices]
-      operationId: listInvoices
+      operationId: getInvoices
       summary: restituisce una lista  di fatture (paginata, filtrabile)
       parameters:
         - $ref: '#/components/parameters/page'
@@ -194,7 +202,7 @@ paths:
           in: query
           schema: { type: string }
       responses:
-        '200':
+        "200":
           description: Lista fatture
           headers:
             X-Total-Count:
@@ -203,7 +211,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaginatedInvoices' }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: '#/components/responses/BadRequest' }
     post:
       tags: [Invoices]
       operationId: createInvoice
@@ -211,9 +219,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/InvoiceCreate' }
+            schema: { $ref: '#/components/schemas/InvoiceCreateRequest' }
       responses:
-        '201': { description: Creato, content: { application/json: { schema: { $ref: '#/components/schemas/Invoice' } } } }
+        "201":
+          description: Creata nuova fattura con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedId' }
 
   /invoices/{id}:
     get:
@@ -221,8 +233,12 @@ paths:
       operationId: getInvoice
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Invoice' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoiceResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
     put:
       tags: [Invoices]
       operationId: updateInvoice
@@ -231,24 +247,27 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/InvoiceUpdate' }
+            schema: { $ref: '#/components/schemas/InvoiceUpdateRequest' }
       responses:
-        '200': { description: Aggiornato, content: { application/json: { schema: { $ref: '#/components/schemas/Invoice' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "200":
+          description: Aggiornata fattura con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoiceResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
     delete:
       tags: [Invoices]
       operationId: deleteInvoice
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
-        '204': { description: Cancellato }
-        '404': { $ref: '#/components/responses/NotFound' }
+        "204": { description: Cancellata fattura con successo }
+        "404": { $ref: '#/components/responses/NotFound' }
 
- 
   /user-tax-profiles:
     get:
       tags: [TaxProfiles]
       operationId: listUserTaxProfiles
-      summary: restituisce una òista profili fiscali utente (paginata, filtrabile)
+      summary: restituisce una lista profili fiscali utente (paginata, filtrabile)
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
@@ -266,7 +285,7 @@ paths:
           in: query
           schema: { type: string }
       responses:
-        '200':
+        "200":
           description: Lista di profili fiscali utente
           headers:
             X-Total-Count:
@@ -274,7 +293,7 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaginatedUserTaxProfiles' }
-        '400': { $ref: '#/components/responses/BadRequest' }
+        "400": { $ref: '#/components/responses/BadRequest' }
     post:
       tags: [TaxProfiles]
       operationId: createUserTaxProfile
@@ -282,20 +301,28 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UserTaxProfileCreate' }
+            schema: { $ref: '#/components/schemas/UserTaxProfileCreateRequest' }
       responses:
-        '201': { description: profilo fiscale utente creato, content: { application/json: { schema: { $ref: '#/components/schemas/UserTaxProfile' } } } }
+        "201":
+          description: Profilo fiscale utente creato
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedId' }
 
   /user-tax-profiles/{id}:
-     get:
+    get:
       tags: [TaxProfiles]
-      summary: restituisce un profili fiscale utente, per id
+      summary: restituisce un profilo fiscale utente, per id
       operationId: getUserTaxProfile
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
-        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/UserTaxProfile' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
-     put:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserTaxProfileResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    put:
       tags: [TaxProfiles]
       operationId: updateUserTaxProfile
       parameters: [ { $ref: '#/components/parameters/id' } ]
@@ -303,26 +330,28 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/UserTaxProfileUpdate' }
+            schema: { $ref: '#/components/schemas/UserTaxProfileUpdateRequest' }
       responses:
-        '200': { description: Aggiornato tasso profilo utente, content: { application/json: { schema: { $ref: '#/components/schemas/UserTaxProfile' } } } }
-        '404': { $ref: '#/components/responses/NotFound' }
-      delete:
-        tags: [TaxProfiles]
-        operationId: deleteUserTaxProfile
-        parameters: [ { $ref: '#/components/parameters/id' } ]
-        responses:
-          '204': { description: Cancellato }
-          '404': { $ref: '#/components/responses/NotFound' }
-
-  
+        "200":
+          description: Aggiornato profilo fiscale utente con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserTaxProfileResponse' }
+        "404": { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [TaxProfiles]
+      operationId: deleteUserTaxProfile
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      responses:
+        "204": { description: Cancellato profilo fiscale utente con successo }
+        "404": { $ref: '#/components/responses/NotFound' }
 
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT   # solo documentativo
+      bearerFormat: JWT
       description: >
         Invia `Authorization: Bearer <token>`. (RFC 6750)
     apiKeyAuth:
@@ -331,13 +360,15 @@ components:
       name: X-API-Key
       description: Chiave API per integrazioni server-to-server.
 
-
   parameters:
     id:
       in: path
       name: id
       required: true
-      schema: { type: string }
+      description: Identificatore risorsa (UUID)
+      schema:
+        type: string
+        format: uuid
     page:
       in: query
       name: page
@@ -379,8 +410,7 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/ProblemDetails' }
-    
- 
+
   schemas:
     ProblemDetails:
       type: object
@@ -391,7 +421,6 @@ components:
         status: { type: integer, example: 400 }
         detail: { type: string, example: "Parametro 'page' deve essere >= 1" }
         instance: { type: string, example: "/users?page=0" }
-    
 
     # Auth
     RegisterRequest:
@@ -421,7 +450,7 @@ components:
     AuthUser:
       type: object
       properties:
-        user: { $ref: '#/components/schemas/User' }
+        user: { $ref: '#/components/schemas/UserResponse' }
         accessToken: { type: string }
         refreshToken: { type: string }
 
@@ -432,12 +461,14 @@ components:
         refreshToken: { type: string }
         expiresIn: { type: integer, example: 3600 }
 
-    User:
+    # Users
+    UserResponse:
       type: object
-      required: [firstName, lastName, email, role, isEnabled, createdAt, updatedAt]
+      required: [id, firstName, lastName, email, role, isEnabled, createdAt, updatedAt]
       properties:
-        firstName: { type: string, nullable: true }
-        lastName: { type: string, nullable: true }
+        id: { type: string, format: uuid }
+        firstName: { type: string }
+        lastName: { type: string }
         email: { type: string, format: email }
         phone: { type: string, nullable: true }
         role: { $ref: '#/components/schemas/UserRole' }
@@ -445,17 +476,17 @@ components:
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
-    UserCreate:
+    UserCreateRequest:
       type: object
       required: [firstName, lastName, role, email]
       properties:
-        firstName: { type: string}
+        firstName: { type: string }
         lastName: { type: string }
-        email: { type: string, format: email}
-        phone : { type: string, nullable: true }
+        email: { type: string, format: email }
+        phone: { type: string, nullable: true }
         role: { $ref: '#/components/schemas/UserRole' }
 
-    UserUpdate:
+    UserUpdateRequest:
       type: object
       properties:
         firstName: { type: string }
@@ -463,21 +494,21 @@ components:
         role: { $ref: '#/components/schemas/UserRole' }
         email: { type: string, format: email }
         phone: { type: string, nullable: true }
-        isEnabled: { type: boolean } 
+        isEnabled: { type: boolean }
 
     UserRole:
       type: string
       enum: [USER, ADMIN]
 
     # Invoices
-    Invoice:
+    InvoiceResponse:
       type: object
       required: [code, issueDate, currency, customerId, billToCustomerTaxProfileId, status, subtotal, taxTotal, grandTotal, paymentMethod]
       properties:
         code: { type: string }
         issueDate: { type: string, format: date-time }
         dueDate: { type: string, format: date-time, nullable: true }
-        currency: { type: string, example: EUR }
+        currency: { type: string, example: "EUR" }
         customerId: { type: string }
         billToCustomerTaxProfileId: { type: string, nullable: true }
         shipToCustomerTaxProfileId: { type: string, nullable: true }
@@ -485,11 +516,11 @@ components:
         subtotal: { type: string, example: "100.00" }
         taxTotal: { type: string, example: "22.00" }
         grandTotal: { type: string, example: "122.00" }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethod' }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
-    InvoiceCreate:
+    InvoiceCreateRequest:
       type: object
       required: [code, issueDate, currency, customerId, subtotal, taxTotal, grandTotal]
       properties:
@@ -504,9 +535,9 @@ components:
         subtotal: { type: string }
         taxTotal: { type: string }
         grandTotal: { type: string }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethod' }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
 
-    InvoiceUpdate:
+    InvoiceUpdateRequest:
       type: object
       properties:
         issueDate: { type: string, format: date-time }
@@ -519,7 +550,7 @@ components:
         subtotal: { type: string }
         taxTotal: { type: string }
         grandTotal: { type: string }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethod' }
+        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
 
     InvoiceStatus:
       type: string
@@ -547,9 +578,9 @@ components:
         city: { type: string }
         province: { type: string, nullable: true }
         postalCode: { type: string }
-        countryCode: { type: string, example: IT }
+        countryCode: { type: string, example: "IT" }
 
-    UserTaxProfile:
+    UserTaxProfileResponse:
       allOf:
         - $ref: '#/components/schemas/TaxProfileBase'
         - type: object
@@ -559,7 +590,7 @@ components:
             createdAt: { type: string, format: date-time }
             updatedAt: { type: string, format: date-time }
 
-    UserTaxProfileCreate:
+    UserTaxProfileCreateRequest:
       allOf:
         - $ref: '#/components/schemas/TaxProfileBase'
         - type: object
@@ -567,16 +598,26 @@ components:
           properties:
             userId: { type: string }
 
-    UserTaxProfileUpdate:
+    # Update ridichiarato come oggetto "flat" con tutti i campi opzionali
+    UserTaxProfileUpdateRequest:
       type: object
-      allOf:
-        - $ref: '#/components/schemas/TaxProfileBase'
+      properties:
+        type: { $ref: '#/components/schemas/TaxType' }
+        legalName: { type: string }
+        fiscalCode: { type: string }
+        vatNumber: { type: string, nullable: true }
+        addressLine1: { type: string }
+        addressLine2: { type: string, nullable: true }
+        city: { type: string }
+        province: { type: string, nullable: true }
+        postalCode: { type: string }
+        countryCode: { type: string, example: "IT" }
 
-    # Paginazioni
+    # Risposte paginated
     PaginatedUsers:
       type: object
       properties:
-        data: { type: array, items: { $ref: '#/components/schemas/User' } }
+        data: { type: array, items: { $ref: '#/components/schemas/UserResponse' } }
         page: { type: integer }
         pageSize: { type: integer }
         total: { type: integer }
@@ -584,7 +625,7 @@ components:
     PaginatedInvoices:
       type: object
       properties:
-        data: { type: array, items: { $ref: '#/components/schemas/Invoice' } }
+        data: { type: array, items: { $ref: '#/components/schemas/InvoiceResponse' } }
         page: { type: integer }
         pageSize: { type: integer }
         total: { type: integer }
@@ -592,7 +633,17 @@ components:
     PaginatedUserTaxProfiles:
       type: object
       properties:
-        data: { type: array, items: { $ref: '#/components/schemas/UserTaxProfile' } }
+        data: { type: array, items: { $ref: '#/components/schemas/UserTaxProfileResponse' } }
         page: { type: integer }
         pageSize: { type: integer }
         total: { type: integer }
+
+    # Schema riutilizzabile per 201 che ritornano solo l'id
+    CreatedId:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
