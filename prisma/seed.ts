@@ -1,10 +1,21 @@
-import { PrismaClient, Prisma, InvoiceStatus, PaymentMethod, TaxType, UserRole } from "@prisma/client";
+import {
+  PrismaClient,
+  Prisma,
+  InvoiceStatus,
+  PaymentMethod,
+  TaxType,
+  UserRole,
+} from "@prisma/client";
 
-const prisma = new PrismaClient();
+import bcrypt from "bcrypt";
+
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({});
+
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 async function main() {
-  // Pulizia opzionale (sconsigliata in prod!)
-  // Ordine inverso per rispettare le FK
   await prisma.userInvoice.deleteMany();
   await prisma.invoiceItem.deleteMany();
   await prisma.invoice.deleteMany();
@@ -13,14 +24,13 @@ async function main() {
   await prisma.customer.deleteMany();
   await prisma.user.deleteMany();
 
-  console.log('Existing data deleted successfully.');
+  console.log("Existing data deleted successfully.");
 
-
-  const user1= await prisma.user.create({
+  const user1 = await prisma.user.create({
     data: {
       email: "mario.rossi@gmail.com",
       phone: "+390611111111",
-      passwordHash: "$2b$10$K..HASH..FITTIZIO..", // bcrypt hash fittizio
+      passwordHash: await bcrypt.hash("admin123", 10),
       firstName: "Mario",
       lastName: "Rossi",
       role: UserRole.ADMIN,
@@ -31,20 +41,21 @@ async function main() {
 
   console.log(`Created user with id: ${user1.id}`);
 
-const user2 = await prisma.user.create({
+  const user2 = await prisma.user.create({
     data: {
       email: "alessia.capo@gmail.com",
       phone: "+3906113411111",
-      passwordHash: "$2b$10$K..HASH..FITTIZIO..", // bcrypt hash fittizio
+      passwordHash: await bcrypt.hash("admin124", 10),
       firstName: "Alessia",
       lastName: "Capo",
       role: UserRole.ADMIN,
       isEnabled: true,
     },
   });
+
   console.log(`Created user with id: ${user2.id}`);
 
-const userTax1 = await prisma.userTaxProfile.create({
+  const userTax1 = await prisma.userTaxProfile.create({
     data: {
       userId: user1.id,
       type: TaxType.FREELANCER,
@@ -60,8 +71,9 @@ const userTax1 = await prisma.userTaxProfile.create({
     },
   });
 
-    console.log(`Created tax profile with id: ${userTax1.id} for user id: ${user1.id}`);
-
+  console.log(
+    `Created tax profile with id: ${userTax1.id} for user id: ${user1.id}`
+  );
 
   const userTax2 = await prisma.userTaxProfile.create({
     data: {
@@ -79,7 +91,9 @@ const userTax1 = await prisma.userTaxProfile.create({
     },
   });
 
-  console.log(`Created tax profile with id: ${userTax2.id} for user id: ${user2.id}`);
+  console.log(
+    `Created tax profile with id: ${userTax2.id} for user id: ${user2.id}`
+  );
 
   const customer1 = await prisma.customer.create({
     data: {
@@ -91,8 +105,7 @@ const userTax1 = await prisma.userTaxProfile.create({
     },
   });
 
-    console.log(`Created customer1 with id: ${customer1.id}`);
-
+  console.log(`Created customer1 with id: ${customer1.id}`);
 
   const customerTax1 = await prisma.customerTaxProfile.create({
     data: {
@@ -110,8 +123,10 @@ const userTax1 = await prisma.userTaxProfile.create({
     },
   });
 
-  console.log(`Created tax profile with id: ${customerTax1.id} for customer id: ${customer1.id}`);
-  
+  console.log(
+    `Created tax profile with id: ${customerTax1.id} for customer id: ${customer1.id}`
+  );
+
   const customerShipTax1 = await prisma.customerTaxProfile.create({
     data: {
       customerId: customer1.id,
@@ -128,11 +143,11 @@ const userTax1 = await prisma.userTaxProfile.create({
     },
   });
 
-  console.log(`Created shipping tax profile with id: ${customerShipTax1.id} for customer id: ${customer1.id}`);
-  
+  console.log(
+    `Created shipping tax profile with id: ${customerShipTax1.id} for customer id: ${customer1.id}`
+  );
 
-
-const customer2 = await prisma.customer.create({
+  const customer2 = await prisma.customer.create({
     data: {
       email: "acquisti2@azienda-spa.it",
       phone: "+3906127878745678",
@@ -144,7 +159,7 @@ const customer2 = await prisma.customer.create({
 
   console.log(`Created customer2 with id: ${customer2.id}`);
 
- const customerTax2 = await prisma.customerTaxProfile.create({
+  const customerTax2 = await prisma.customerTaxProfile.create({
     data: {
       customerId: customer2.id,
       type: TaxType.COMPANY,
@@ -160,9 +175,10 @@ const customer2 = await prisma.customer.create({
     },
   });
 
-  console.log(`Created tax profile with id: ${customerTax2.id} for customer id: ${customer2.id}`);
-  
-  
+  console.log(
+    `Created tax profile with id: ${customerTax2.id} for customer id: ${customer2.id}`
+  );
+
   const invoice1 = await prisma.invoice.create({
     data: {
       invoiceNumber: 2025000001n,
@@ -201,7 +217,7 @@ const customer2 = await prisma.customer.create({
       lineTotal: new Prisma.Decimal("1220.00"),
     },
   });
-console.log(`Created invoice item for invoice id: ${invoice1.id}`);
+  console.log(`Created invoice item for invoice id: ${invoice1.id}`);
 
   await prisma.userInvoice.create({
     data: {
@@ -257,9 +273,7 @@ console.log(`Created invoice item for invoice id: ${invoice1.id}`);
   });
   console.log(`Linked user id: ${user1.id} to invoice id: ${invoice2.id}`);
 
-
-
-const invoice3 = await prisma.invoice.create({
+  const invoice3 = await prisma.invoice.create({
     data: {
       invoiceNumber: 2025000003n,
       issueDate: new Date("2025-08-01T10:00:00.000Z"),
@@ -297,7 +311,7 @@ const invoice3 = await prisma.invoice.create({
       lineTotal: new Prisma.Decimal("122.00"),
     },
   });
-console.log(`Created invoice item for invoice id: ${invoice3.id}`);
+  console.log(`Created invoice item for invoice id: ${invoice3.id}`);
 
   await prisma.userInvoice.create({
     data: {

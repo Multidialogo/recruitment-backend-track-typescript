@@ -15,38 +15,13 @@ tags:
   - name: Invoices
   - name: TaxProfiles
 
-security:
-  - bearerAuth: []
-  - apiKeyAuth: []
-
 paths:
-  /auth/register:
-    post:
-      tags: [Auth]
-      summary: Registra un nuovo utente
-      description: >
-        Crea un utente. La password sarà **hashata con bcrypt** lato server
-        (non salvare mai password in chiaro).
-      security: []   # pubblica
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/RegisterRequest' }
-      responses:
-        "201":
-          description: Utente creato
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/AuthUser' }
-        "409": { $ref: '#/components/responses/Conflict' }
-        "400": { $ref: '#/components/responses/BadRequest' }
-
   /auth/login:
     post:
       tags: [Auth]
       summary: Effettua il login (JWT)
-      security: []   # pubblica
+      description: Ritorna access e refresh token
+      security: []   # PUBBLICO
       requestBody:
         required: true
         content:
@@ -61,33 +36,16 @@ paths:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "400": { $ref: '#/components/responses/BadRequest' }
 
-  /auth/refresh:
-    post:
-      tags: [Auth]
-      summary: Refresh del token di accesso
-      security: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/RefreshRequest' }
-      responses:
-        "200":
-          description: Nuovo access token
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/LoginResponse' }
-        "401": { $ref: '#/components/responses/Unauthorized' }
 
   /users:
     get:
       tags: [Users]
       operationId: getUsers
       summary: restituisce una lista di utenti, è possibile filtrare e paginare
+      security: [ { bearerAuth: [] } ]
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
-        - $ref: '#/components/parameters/sort'
         - name: email
           in: query
           schema: { type: string, format: email }
@@ -112,11 +70,13 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaginatedUsers' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "400": { $ref: '#/components/responses/BadRequest' }
     post:
       tags: [Users]
       operationId: createUser
-      summary: Crea un nuovo utente
+      summary: Crea un nuovo utente (solo ADMIN)
+      security: [ { bearerAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -128,6 +88,8 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CreatedId' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "403": { $ref: '#/components/responses/Forbidden' }
         "409": { $ref: '#/components/responses/Conflict' }
         "400": { $ref: '#/components/responses/BadRequest' }
 
@@ -135,6 +97,7 @@ paths:
     get:
       tags: [Users]
       operationId: getUser
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
         "200":
@@ -142,10 +105,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/UserResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
     put:
       tags: [Users]
       operationId: updateUser
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       requestBody:
         required: true
@@ -158,13 +123,19 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/UserResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
+        "400": { $ref: '#/components/responses/BadRequest' }
     delete:
       tags: [Users]
       operationId: deleteUser
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
-        "204": { description: Utente cancellato con successo }
+        "204":
+          description: Utente cancellato con successo
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "403": { $ref: '#/components/responses/Forbidden' }
         "404": { $ref: '#/components/responses/NotFound' }
 
   /invoices:
@@ -172,10 +143,10 @@ paths:
       tags: [Invoices]
       operationId: getInvoices
       summary: restituisce una lista  di fatture (paginata, filtrabile)
+      security: [ { bearerAuth: [] } ]
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
-        - $ref: '#/components/parameters/sort'
         - name: customerId
           in: query
           schema: { type: string }
@@ -211,10 +182,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaginatedInvoices' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "400": { $ref: '#/components/responses/BadRequest' }
     post:
       tags: [Invoices]
       operationId: createInvoice
+      security: [ { bearerAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -226,11 +199,15 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CreatedId' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+        "409": { $ref: '#/components/responses/Conflict' }
 
   /invoices/{id}:
     get:
       tags: [Invoices]
       operationId: getInvoice
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
         "200":
@@ -238,10 +215,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/InvoiceResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
     put:
       tags: [Invoices]
       operationId: updateInvoice
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       requestBody:
         required: true
@@ -254,13 +233,17 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/InvoiceResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
+        "400": { $ref: '#/components/responses/BadRequest' }
     delete:
       tags: [Invoices]
       operationId: deleteInvoice
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
         "204": { description: Cancellata fattura con successo }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
 
   /user-tax-profiles:
@@ -268,10 +251,10 @@ paths:
       tags: [TaxProfiles]
       operationId: listUserTaxProfiles
       summary: restituisce una lista profili fiscali utente (paginata, filtrabile)
+      security: [ { bearerAuth: [] } ]
       parameters:
         - $ref: '#/components/parameters/page'
         - $ref: '#/components/parameters/pageSize'
-        - $ref: '#/components/parameters/sort'
         - name: userId
           in: query
           schema: { type: string }
@@ -293,10 +276,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/PaginatedUserTaxProfiles' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "400": { $ref: '#/components/responses/BadRequest' }
     post:
       tags: [TaxProfiles]
       operationId: createUserTaxProfile
+      security: [ { bearerAuth: [] } ]
       requestBody:
         required: true
         content:
@@ -308,12 +293,15 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CreatedId' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "400": { $ref: '#/components/responses/BadRequest' }
 
   /user-tax-profiles/{id}:
     get:
       tags: [TaxProfiles]
       summary: restituisce un profilo fiscale utente, per id
       operationId: getUserTaxProfile
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
         "200":
@@ -321,10 +309,12 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/UserTaxProfileResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
     put:
       tags: [TaxProfiles]
       operationId: updateUserTaxProfile
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       requestBody:
         required: true
@@ -337,13 +327,17 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/UserTaxProfileResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
+        "400": { $ref: '#/components/responses/BadRequest' }
     delete:
       tags: [TaxProfiles]
       operationId: deleteUserTaxProfile
+      security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
         "204": { description: Cancellato profilo fiscale utente con successo }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
 
 components:
@@ -352,8 +346,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: >
-        Invia `Authorization: Bearer <token>`. (RFC 6750)
+      description: Token JWT per autenticazione utente.
     apiKeyAuth:
       type: apiKey
       in: header
@@ -377,83 +370,52 @@ components:
       in: query
       name: pageSize
       schema: { type: integer, minimum: 1, maximum: 200, default: 20 }
-    sort:
-      in: query
-      name: sort
-      description: >
-        Ordinamento, es. `createdAt:desc,code:asc`. Implementazione a discrezione del server.
-      schema: { type: string }
+
 
   responses:
     BadRequest:
       description: Richiesta non valida
       content:
         application/problem+json:
-          schema: { $ref: '#/components/schemas/ProblemDetails' }
+          schema: { $ref: '#/components/schemas/ErrorDetails' }
     Unauthorized:
       description: Non autenticato o token invalido
       content:
         application/problem+json:
-          schema: { $ref: '#/components/schemas/ProblemDetails' }
+          schema: { $ref: '#/components/schemas/ErrorDetails' }
     Forbidden:
       description: Autenticato ma non autorizzato
       content:
         application/problem+json:
-          schema: { $ref: '#/components/schemas/ProblemDetails' }
+          schema: { $ref: '#/components/schemas/ErrorDetails' }
     NotFound:
       description: Risorsa non trovata
       content:
         application/problem+json:
-          schema: { $ref: '#/components/schemas/ProblemDetails' }
+          schema: { $ref: '#/components/schemas/ErrorDetails' }
     Conflict:
       description: Conflitto (es. email duplicata)
       content:
         application/problem+json:
-          schema: { $ref: '#/components/schemas/ProblemDetails' }
+          schema: { $ref: '#/components/schemas/ErrorDetails' }
 
   schemas:
-    ProblemDetails:
+    ErrorDetails:
       type: object
-      required: [title, status]
+      required: [message, status]
       properties:
-        type: { type: string, format: uri, example: "https://api.example.com/errors/validation" }
-        title: { type: string, example: "Bad Request" }
-        status: { type: integer, example: 400 }
-        detail: { type: string, example: "Parametro 'page' deve essere >= 1" }
-        instance: { type: string, example: "/users?page=0" }
+        message: { type: string, example: "Bad Request" }
+        status:  { type: integer, example: 400 }
+        detail:  { type: string, example: "Parametro 'page' deve essere >= 1" }
 
     # Auth
-    RegisterRequest:
-      type: object
-      required: [email, password]
-      properties:
-        email: { type: string, format: email }
-        password:
-          type: string
-          format: password
-          minLength: 8
-          description: >
-            Sarà hashata con bcrypt lato server (salting + work factor adeguato).
-        firstName: { type: string }
-        lastName: { type: string }
     LoginRequest:
       type: object
       required: [email, password]
       properties:
         email: { type: string, format: email }
         password: { type: string, format: password }
-    RefreshRequest:
-      type: object
-      required: [refreshToken]
-      properties:
-        refreshToken: { type: string }
-    AuthUser:
-      type: object
-      properties:
-        user: { $ref: '#/components/schemas/UserResponse' }
-        accessToken: { type: string }
-        refreshToken: { type: string }
-
+        
     LoginResponse:
       type: object
       properties:
@@ -478,12 +440,13 @@ components:
 
     UserCreateRequest:
       type: object
-      required: [firstName, lastName, role, email]
+      required: [firstName, lastName, role, email, password]
       properties:
         firstName: { type: string }
         lastName: { type: string }
         email: { type: string, format: email }
         phone: { type: string, nullable: true }
+        password: { type: string, format: password, minLength: 6 }
         role: { $ref: '#/components/schemas/UserRole' }
 
     UserUpdateRequest:
@@ -494,6 +457,7 @@ components:
         role: { $ref: '#/components/schemas/UserRole' }
         email: { type: string, format: email }
         phone: { type: string, nullable: true }
+        password: { type: string, format: password, minLength: 6 }
         isEnabled: { type: boolean }
 
     UserRole:
@@ -503,7 +467,7 @@ components:
     # Invoices
     InvoiceResponse:
       type: object
-      required: [code, issueDate, currency, customerId, billToCustomerTaxProfileId, status, subtotal, taxTotal, grandTotal, paymentMethod]
+      required: [code, issueDate, currency, customerId, status, subtotal, taxTotal, grandTotal, createdAt, updatedAt]
       properties:
         code: { type: string }
         issueDate: { type: string, format: date-time }
@@ -584,7 +548,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/TaxProfileBase'
         - type: object
-          required: [userId]
+          required: [userId, createdAt, updatedAt]
           properties:
             userId: { type: string }
             createdAt: { type: string, format: date-time }
@@ -598,7 +562,6 @@ components:
           properties:
             userId: { type: string }
 
-    # Update ridichiarato come oggetto "flat" con tutti i campi opzionali
     UserTaxProfileUpdateRequest:
       type: object
       properties:
@@ -613,7 +576,7 @@ components:
         postalCode: { type: string }
         countryCode: { type: string, example: "IT" }
 
-    # Risposte paginated
+    # Paginazioni
     PaginatedUsers:
       type: object
       properties:
@@ -638,7 +601,6 @@ components:
         pageSize: { type: integer }
         total: { type: integer }
 
-    # Schema riutilizzabile per 201 che ritornano solo l'id
     CreatedId:
       type: object
       required: [id]

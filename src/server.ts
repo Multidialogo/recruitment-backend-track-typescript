@@ -7,6 +7,7 @@ import * as OpenApiValidator from "express-openapi-validator";
 import pino from "pino";
 import pinoHttp from "pino-http";
 import { fileURLToPath } from 'url';
+import { buildUserRouter } from "./routes/user.routes";
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -41,11 +42,29 @@ app.use(
 );
 
 
-// Error handler (dopo tutte le route e il validator)
-app.use((err: any, _req: any, res: any, _next: any) => {
-  const status = err.status || 500;
-  res.status(status).json({ message: err.message, errors: err.errors });
+app.use("/users", buildUserRouter());
+
+
+// Error handler
+app.use((error: any, _req: any, res: any, _next: any) => {
+  console.error(error.stack);
+  
+  const detail =
+    Array.isArray(error.errors) && error.errors.length
+      ? error.errors.map((e: any) => e.message).join("; ")
+      : (error.detail || error.message);
+
+  const problemDetails = {
+    message: error.message,
+    status: error.status || 500,
+    detail: detail,
+  };
+
+  res.status(problemDetails.status).json({...problemDetails});
 });
+
+
+
 
 app.listen(port, () => {
   console.log(`API ready:    http://localhost:${port}`);
