@@ -1,6 +1,5 @@
 {
   "name": "recruitment-backend-track-typescript-main",
-  "type": "module",
   "version": "1.0.0",
   "description": "An evaluation exercise for candidates willing to test their back-end capabilities. Typescript language track",
   "main": "index.js",
@@ -19,6 +18,7 @@
     "@prisma/client": "^6.13.0",
     "bcrypt": "^6.0.0",
     "copyfiles": "^2.4.1",
+    "crypto-js": "^4.2.0",
     "express": "^5.1.0",
     "express-openapi-validator": "^5.5.8",
     "jsonwebtoken": "^9.0.2",
@@ -30,6 +30,7 @@
   "devDependencies": {
     "@krsbx/prisma-repo": "^0.2.7",
     "@types/bcrypt": "^6.0.0",
+    "@types/crypto-js": "^4.2.2",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/node": "^24.3.0",
@@ -49,9 +50,12 @@
     "build": "tsc",
     "postbuild": "copyfiles -u 2 \"src/config/openapi/**/*\" dist/config/",
     "start": "node dist/server.js",
-    "prisma:seed": "ts-node prisma db seed",
     "prisma:generate": "prisma generate",
+    "prisma:seed": "tsx prisma/seed.ts",
     "prisma:migrate": "prisma migrate dev --name init",
     "orval:generator-dto": "orval --config src/config/orval.config.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

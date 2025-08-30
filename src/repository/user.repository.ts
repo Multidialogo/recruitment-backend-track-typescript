@@ -4,7 +4,7 @@ import type {
   PageParameter,
   PageSizeParameter,
 } from "../api/dto";
-import type { UserFilter } from "../shared/dto/user.filter.dto";
+import type { UserFilter } from "../shared/dto/user.type.dto";
 import type { PaginationDto } from "../shared/dto/pagination.dto";
 
 const prisma = new PrismaClient();

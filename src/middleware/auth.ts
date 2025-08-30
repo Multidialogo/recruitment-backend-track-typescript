@@ -1,35 +1,41 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import type { Request, Response, NextFunction } from "express";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 export type AppRole = "USER" | "ADMIN";
 
-export interface JwtUser {
+export interface JwtUser extends JwtPayload {
   id: string;
   email: string;
   role: AppRole;
 }
 
-export const verifyToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const hdr = req.header("Authorization") || "";
-  const token = hdr.startsWith("Bearer ") ? hdr.slice(7) : "";
+export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+  const auth = req.header("Authorization") || "";
+  const hasBearer = auth.startsWith("Bearer ");
+  const token = hasBearer ? auth.slice(7).trim() : "";
+
   if (!token) {
     return res
       .status(401)
       .type("application/problem+json")
       .json({ message: "Unauthorized", status: 401, detail: "Token mancante" });
   }
+
   try {
-    const payload = jwt.verify(token, JWT_SECRET);
+    const payload = jwt.verify(token, JWT_SECRET) as JwtUser;
     (req as any).user = payload;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: "Invalid token" });
+    return next();
+  } catch (err: any) {
+    return res
+      .status(401)
+      .type("application/problem+json")
+      .json({
+        message: "Invalid token",
+        status: 401,
+        detail: err?.message || "Token non valido",
+      });
   }
 };
 
@@ -40,21 +46,13 @@ export const requireRole = (role: AppRole) => {
       return res
         .status(401)
         .type("application/problem+json")
-        .json({
-          message: "Unauthorized",
-          status: 401,
-          detail: "Need authentication",
-        });
+        .json({ message: "Unauthorized", status: 401, detail: "Need authentication" });
     }
     if (user.role !== role) {
       return res
         .status(403)
         .type("application/problem+json")
-        .json({
-          message: "Forbidden",
-          status: 403,
-          detail: "Insufficient role",
-        });
+        .json({ message: "Forbidden", status: 403, detail: "Insufficient role" });
     }
     next();
   };

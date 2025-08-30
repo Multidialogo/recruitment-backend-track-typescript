@@ -8,6 +8,7 @@
  */
 
 export * from './badRequestResponse';
+export * from './changePasswordBody';
 export * from './conflictResponse';
 export * from './createdId';
 export * from './errorDetails';
@@ -28,11 +29,11 @@ export * from './paginatedInvoices';
 export * from './paginatedUserTaxProfiles';
 export * from './paginatedUsers';
 export * from './paymentMethod';
-export * from './sortParameter';
 export * from './taxProfileBase';
 export * from './taxType';
 export * from './unauthorizedResponse';
 export * from './userCreateRequest';
+export * from './userPatchRequest';
 export * from './userResponse';
 export * from './userRole';
 export * from './userTaxProfileCreateRequest';

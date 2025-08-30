@@ -1,17 +1,13 @@
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";
-import path from "path";
 import YAML from "yaml";
 import * as OpenApiValidator from "express-openapi-validator";
 import pino from "pino";
 import pinoHttp from "pino-http";
-import { fileURLToPath } from 'url';
-import { buildUserRouter } from "./routes/user.routes";
-
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname  = path.dirname(__filename);
+import { buildUserRouter } from "./routes/user.routes.js";
+import authRouter from "./routes/auth.routes.js";
+import path from "path";
 
 
 const app = express();
@@ -38,11 +34,13 @@ app.use(
     apiSpec: openapiDoc,
     validateRequests: true,
     validateResponses: true,
+    coerceTypes: true
   })
 );
 
 
 app.use("/users", buildUserRouter());
+app.use("/auth", authRouter);
 
 
 // Error handler

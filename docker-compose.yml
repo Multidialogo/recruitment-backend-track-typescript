@@ -4,15 +4,17 @@ services:
   backend-node:
     build:
       context: .
-      target: ${BUILD_TARGET:-development}   # scegli: development o production
+      target: ${BUILD_TARGET:-development}
     container_name: backend-node
     volumes:
-      - .:/app           # solo in dev per hot-reload
+      - .:/app
       - /app/node_modules
     ports:
-      - "3000:3000"    
+      - "3000:3000"
+      - "9229:9229"   # porta debugger
     environment:
       - NODE_ENV=development
+      - DATABASE_URL=postgresql://user:password@db:5432/invoice-management?schema=public
     depends_on:
       - db
 
@@ -31,12 +33,11 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: 
-      
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: invoice-management
     volumes:
       - dbdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     restart: always
 
 

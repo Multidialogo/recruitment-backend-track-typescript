@@ -6,15 +6,15 @@ info:
     Spec-first per Users, Invoices, Tax Profiles, con pagination/filtri avanzati,
     errori Problem Details e sicurezza (JWT bearer + API Key).
 
-servers:
-  - url: /api
-
 tags:
   - name: Auth
   - name: Users
   - name: Invoices
   - name: TaxProfiles
 
+servers:
+  - url: /
+  
 paths:
   /auth/login:
     post:
@@ -48,17 +48,21 @@ paths:
         - $ref: '#/components/parameters/pageSize'
         - name: email
           in: query
-          schema: { type: string, format: email }
+          schema: { type: string, format: email, nullable: true }
           description: Filtra per email esatta
         - name: role
           in: query
-          schema: { $ref: '#/components/schemas/UserRole' }
+          schema: 
+            type: string
+            nullable: true
+            allOf:
+              - $ref: '#/components/schemas/UserRole'
         - name: isEnabled
           in: query
-          schema: { type: boolean }
+          schema: { type: boolean, nullable: true }
         - name: q
           in: query
-          schema: { type: string }
+          schema: { type: string , nullable: true}
           description: Ricerca full-text su nome/cognome/email
       responses:
         "200":
@@ -96,7 +100,7 @@ paths:
   /users/{id}:
     get:
       tags: [Users]
-      operationId: getUser
+      operationId: getUserById
       security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
@@ -109,7 +113,8 @@ paths:
         "404": { $ref: '#/components/responses/NotFound' }
     put:
       tags: [Users]
-      operationId: updateUser
+      operationId: updateUserById
+      summary: Aggiorna dti utente (anche dati sensibili come ruolo, password, email)
       security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       requestBody:
@@ -124,11 +129,33 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/UserResponse' }
         "401": { $ref: '#/components/responses/Unauthorized' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "404": { $ref: '#/components/responses/NotFound' }
+        "400": { $ref: '#/components/responses/BadRequest' }
+
+    patch:
+      tags: [Users]
+      operationId: patchUserById
+      summary: Aggiorna dati utente (non sensibili, esclude ruolo, password, email)
+      security: [ { bearerAuth: [] } ]
+      parameters: [ { $ref: '#/components/parameters/id' } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserPatchRequest' }
+      responses:
+        "200":
+          description: Utente aggiornato con successo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserResponse' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
         "404": { $ref: '#/components/responses/NotFound' }
         "400": { $ref: '#/components/responses/BadRequest' }
     delete:
       tags: [Users]
-      operationId: deleteUser
+      operationId: deleteUserById
       security: [ { bearerAuth: [] } ]
       parameters: [ { $ref: '#/components/parameters/id' } ]
       responses:
@@ -137,6 +164,8 @@ paths:
         "401": { $ref: '#/components/responses/Unauthorized' }
         "403": { $ref: '#/components/responses/Forbidden' }
         "404": { $ref: '#/components/responses/NotFound' }
+
+  
 
   /invoices:
     get:
@@ -358,10 +387,9 @@ components:
       in: path
       name: id
       required: true
-      description: Identificatore risorsa (UUID)
+      description: Identificatore risorsa (cryptato)
       schema:
         type: string
-        format: uuid
     page:
       in: query
       name: page
@@ -402,11 +430,10 @@ components:
   schemas:
     ErrorDetails:
       type: object
-      required: [message, status]
       properties:
-        message: { type: string, example: "Bad Request" }
-        status:  { type: integer, example: 400 }
-        detail:  { type: string, example: "Parametro 'page' deve essere >= 1" }
+        message: { type: string, nullable: true }
+        status:  { type: integer, nullable: true }
+        detail:  { type: string, nullable: true}
 
     # Auth
     LoginRequest:
@@ -428,7 +455,7 @@ components:
       type: object
       required: [id, firstName, lastName, email, role, isEnabled, createdAt, updatedAt]
       properties:
-        id: { type: string, format: uuid }
+        id: { type: string}
         firstName: { type: string }
         lastName: { type: string }
         email: { type: string, format: email }
@@ -437,6 +464,8 @@ components:
         isEnabled: { type: boolean, default: true }
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
+
+  
 
     UserCreateRequest:
       type: object
@@ -452,13 +481,22 @@ components:
     UserUpdateRequest:
       type: object
       properties:
-        firstName: { type: string }
-        lastName: { type: string }
+        firstName: { type: string,  nullable: true }
+        lastName: { type: string,  nullable: true }
         role: { $ref: '#/components/schemas/UserRole' }
+        email: { type: string, format: email,  nullable: true}
+        phone: { type: string, nullable: true }
+        password: { type: string, format: password, minLength: 6,  nullable: true }
+        isEnabled: { type: boolean,  nullable: true  }
+    
+    UserPatchRequest:
+      type: object
+      properties:
+        firstName: { type: string}
+        lastName: { type: string }
         email: { type: string, format: email }
         phone: { type: string, nullable: true }
-        password: { type: string, format: password, minLength: 6 }
-        isEnabled: { type: boolean }
+
 
     UserRole:
       type: string
@@ -480,7 +518,11 @@ components:
         subtotal: { type: string, example: "100.00" }
         taxTotal: { type: string, example: "22.00" }
         grandTotal: { type: string, example: "122.00" }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
+        paymentMethod:
+          type: string    
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PaymentMethod' 
         createdAt: { type: string, format: date-time }
         updatedAt: { type: string, format: date-time }
 
@@ -499,8 +541,11 @@ components:
         subtotal: { type: string }
         taxTotal: { type: string }
         grandTotal: { type: string }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
-
+        paymentMethod:
+          type: string    
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PaymentMethod'
     InvoiceUpdateRequest:
       type: object
       properties:
@@ -514,8 +559,11 @@ components:
         subtotal: { type: string }
         taxTotal: { type: string }
         grandTotal: { type: string }
-        paymentMethod: { $ref: '#/components/schemas/PaymentMethod', nullable: true }
-
+        paymentMethod:
+          type: string    
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PaymentMethod'
     InvoiceStatus:
       type: string
       enum: [DRAFT, SENT, PAID, OVERDUE, CANCELED]
@@ -579,6 +627,7 @@ components:
     # Paginazioni
     PaginatedUsers:
       type: object
+      required: [data, page, pageSize, total]
       properties:
         data: { type: array, items: { $ref: '#/components/schemas/UserResponse' } }
         page: { type: integer }
@@ -607,5 +656,3 @@ components:
       properties:
         id:
           type: string
-          format: uuid
-          example: "550e8400-e29b-41d4-a716-446655440000"
