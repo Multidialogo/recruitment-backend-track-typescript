@@ -1,9 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
-import { UserService } from "../service/user.service";
+import { UserServiceImpl } from "../service/user.service.impl";
 import { UserMapper } from "../mapper/user.mapper";
 
 export class UserController {
-  constructor(private readonly service = new UserService()) {}
+  constructor(private readonly service = new UserServiceImpl()) {}
 
   getUsers = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -23,7 +23,6 @@ export class UserController {
     }
   };
 
-
   createUser = async (req: Request, res: Response, next: NextFunction) => {
     const userData = req.body;
 
@@ -34,7 +33,6 @@ export class UserController {
       next(error);
     }
   };
-
 
   getUserById = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params;
@@ -81,5 +79,4 @@ export class UserController {
       next(error);
     }
   };
-
 }

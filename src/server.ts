@@ -5,8 +5,8 @@ import YAML from "yaml";
 import * as OpenApiValidator from "express-openapi-validator";
 import pino from "pino";
 import pinoHttp from "pino-http";
-import { buildUserRouter } from "./routes/user.routes.js";
-import authRouter from "./routes/auth.routes.js";
+import { buildUserRouter } from "./route/user.route.js";
+import authRouter from "./route/auth.route.js";
 import path from "path";
 
 
@@ -34,7 +34,6 @@ app.use(
     apiSpec: openapiDoc,
     validateRequests: true,
     validateResponses: true,
-    coerceTypes: true
   })
 );
 
@@ -60,9 +59,6 @@ app.use((error: any, _req: any, res: any, _next: any) => {
 
   res.status(problemDetails.status).json({...problemDetails});
 });
-
-
-
 
 app.listen(port, () => {
   console.log(`API ready:    http://localhost:${port}`);

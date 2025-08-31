@@ -10,8 +10,13 @@ import {
 import bcrypt from "bcrypt";
 
 
-const prisma = new PrismaClient();
-
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    },
+  },
+});
 // Helpers
 const d = (v: string) => new Prisma.Decimal(v);
 const dt = (iso: string) => new Date(iso);

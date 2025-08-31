@@ -1,14 +1,12 @@
-// auth.controller.ts
 import jwt from "jsonwebtoken";
 import type { Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 import { UserMapper } from "../mapper/user.mapper";
 
 
 const prisma = new PrismaClient();
-
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret";
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;

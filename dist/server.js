@@ -43,8 +43,8 @@ const yaml_1 = __importDefault(require("yaml"));
 const OpenApiValidator = __importStar(require("express-openapi-validator"));
 const pino_1 = __importDefault(require("pino"));
 const pino_http_1 = __importDefault(require("pino-http"));
-const user_routes_js_1 = require("./routes/user.routes.js");
-const auth_routes_js_1 = __importDefault(require("./routes/auth.routes.js"));
+const user_route_js_1 = require("./route/user.route.js");
+const auth_route_js_1 = __importDefault(require("./route/auth.route.js"));
 const path_1 = __importDefault(require("path"));
 const app = (0, express_1.default)();
 const openapiPath = path_1.default.join(__dirname, 'config', 'openapi', 'invoice-management-v1.yaml');
@@ -64,10 +64,9 @@ app.use(OpenApiValidator.middleware({
     apiSpec: openapiDoc,
     validateRequests: true,
     validateResponses: true,
-    coerceTypes: true
 }));
-app.use("/users", (0, user_routes_js_1.buildUserRouter)());
-app.use("/auth", auth_routes_js_1.default);
+app.use("/users", (0, user_route_js_1.buildUserRouter)());
+app.use("/auth", auth_route_js_1.default);
 // Error handler
 app.use((error, _req, res, _next) => {
     console.error(error.stack);

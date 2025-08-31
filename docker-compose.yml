@@ -1,5 +1,3 @@
-version: "3"
-
 services:
   backend-node:
     build:
@@ -11,7 +9,6 @@ services:
       - /app/node_modules
     ports:
       - "3000:3000"
-      - "9229:9229"   # porta debugger
     environment:
       - NODE_ENV=development
       - DATABASE_URL=postgresql://user:password@db:5432/invoice-management?schema=public
