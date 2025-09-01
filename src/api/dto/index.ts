@@ -7,10 +7,11 @@
  * OpenAPI spec version: 1.1.0
  */
 
-export * from './authUser';
 export * from './badRequestResponse';
+export * from './changePasswordBody';
 export * from './conflictResponse';
 export * from './createdId';
+export * from './errorDetails';
 export * from './forbiddenResponse';
 export * from './getInvoicesParams';
 export * from './getUsersParams';
@@ -28,14 +29,11 @@ export * from './paginatedInvoices';
 export * from './paginatedUserTaxProfiles';
 export * from './paginatedUsers';
 export * from './paymentMethod';
-export * from './problemDetails';
-export * from './refreshRequest';
-export * from './registerRequest';
-export * from './sortParameter';
 export * from './taxProfileBase';
 export * from './taxType';
 export * from './unauthorizedResponse';
 export * from './userCreateRequest';
+export * from './userPatchRequest';
 export * from './userResponse';
 export * from './userRole';
 export * from './userTaxProfileCreateRequest';

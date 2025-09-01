@@ -1,0 +1,21 @@
+services:
+  test-db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: test_invoice_management
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    depends_on:
+      - test-db
+    ports:
+      - "8081:8080"
+    restart: unless-stopped

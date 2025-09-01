@@ -1,6 +1,5 @@
-
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -9,35 +8,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 /// ===== Models =====
 
 model User {
-  id           BigInt        @id @default(autoincrement()) @map("id_user")
-  email        String        @unique
-  phone        String?       @unique
+  id           BigInt   @id @default(autoincrement()) @map("id_user")
+  email        String   @unique
+  phone        String?  
   passwordHash String
-  firstName    String        @map("name")
-  lastName     String        @map("surname") 
-  role         UserRole      @default(USER)
-  isEnabled    Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  firstName    String   @map("name")
+  lastName     String   @map("surname")
+  role         UserRole @default(USER)
+  isEnabled    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  taxProfile   UserTaxProfile?
-  invoices     Invoice[]     @relation("IssuedInvoices")
-  shares       UserInvoice[]
+  taxProfile UserTaxProfile?
+  invoices   Invoice[]       @relation("IssuedInvoices")
+  shares     UserInvoice[]
 }
 
 model UserTaxProfile {
-  id        BigInt     @id @default(autoincrement()) @map("user_tax_profile_id")
-  userId    BigInt     @unique @map("id_user")
-  user      User       @relation(fields: [userId], references: [id])
-  type      TaxType
+  id     BigInt  @id @default(autoincrement()) @map("user_tax_profile_id")
+  userId BigInt  @unique @map("id_user")
+  user   User    @relation(fields: [userId], references: [id])
+  type   TaxType
 
-  legalName   String
-  fiscalCode  String?
-  vatNumber   String?
+  legalName  String
+  fiscalCode String?
+  vatNumber  String?
 
   // Indirizzo
   addressLine1 String
@@ -47,41 +45,40 @@ model UserTaxProfile {
   postalCode   String
   countryCode  String
 
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  Invoice Invoice[]   @relation("InvoiceIssuerTaxProfile")
+  Invoice Invoice[] @relation("InvoiceIssuerTaxProfile")
 }
 
 model Customer {
-  id           BigInt        @id @default(autoincrement()) @map("customer_id")
-  email        String        @unique
-  phone        String?       @unique
-  firstName    String        @map("name")
-  lastName     String        @map("surname") 
-  isEnabled    Boolean       @default(true)
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id        BigInt   @id @default(autoincrement()) @map("customer_id")
+  email     String   @unique
+  phone     String?  @unique
+  firstName String   @map("name")
+  lastName  String   @map("surname")
+  isEnabled Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   taxProfiles     CustomerTaxProfile[]
-  billedInvoices  Invoice[]       @relation("BillToCustomer")
-  shippedInvoices Invoice[]       @relation("ShipToCustomer")
+  billedInvoices  Invoice[]            @relation("BillToCustomer")
+  shippedInvoices Invoice[]            @relation("ShipToCustomer")
 
   @@index([lastName, firstName])
 }
 
 model CustomerTaxProfile {
-  id         BigInt      @id @default(autoincrement()) @map("customer_tax_profile_id")
-  customerId BigInt      @map("customer_id")
-  customer   Customer    @relation(fields: [customerId], references: [id])
+  id         BigInt   @id @default(autoincrement()) @map("customer_tax_profile_id")
+  customerId BigInt   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id])
   type       TaxType
 
   // Identificativi
-  legalName   String
-  fiscalCode  String?
-  vatNumber   String?
+  legalName  String
+  fiscalCode String?
+  vatNumber  String?
 
   // Indirizzo
   addressLine1 String
@@ -91,11 +88,9 @@ model CustomerTaxProfile {
   postalCode   String
   countryCode  String
 
-  
-  isActive  Boolean   @default(true)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   BillInvoice Invoice[] @relation("BillToCustomerTaxProfile")
 
@@ -103,72 +98,72 @@ model CustomerTaxProfile {
 }
 
 model Invoice {
-  id        BigInt   @id @default(autoincrement()) @map("invoice_id")
-  invoiceNumber    BigInt    @unique @map("invoice_number")
-  issueDate DateTime
-   dueDate    DateTime   @map("due_date")
-   status    InvoiceStatus @default(DRAFT)
+  id            BigInt        @id @default(autoincrement()) @map("invoice_id")
+  invoiceNumber BigInt        @unique @map("invoice_number")
+  issueDate     DateTime
+  dueDate       DateTime      @map("due_date")
+  status        InvoiceStatus @default(DRAFT)
 
   // Riferimenti
-  issuerUserId          BigInt
-  issuerUser            User           @relation("IssuedInvoices", fields: [issuerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  issuerUserId BigInt
+  issuerUser   User   @relation("IssuedInvoices", fields: [issuerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  issuerTaxProfileId    BigInt
-  issuerTaxProfile      UserTaxProfile @relation("InvoiceIssuerTaxProfile", fields: [issuerTaxProfileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  issuerTaxProfileId BigInt
+  issuerTaxProfile   UserTaxProfile @relation("InvoiceIssuerTaxProfile", fields: [issuerTaxProfileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  billToCustomerId      BigInt
-  billToCustomer        Customer       @relation("BillToCustomer", fields: [billToCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  billToCustomerId BigInt
+  billToCustomer   Customer @relation("BillToCustomer", fields: [billToCustomerId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   billToCustomerTaxProfileId BigInt
   billToCustomerTaxProfile   CustomerTaxProfile @relation("BillToCustomerTaxProfile", fields: [billToCustomerTaxProfileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
-  shipToCustomerId      BigInt?
-  shipToCustomer        Customer?      @relation("ShipToCustomer", fields: [shipToCustomerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  shipToCustomerId BigInt?
+  shipToCustomer   Customer? @relation("ShipToCustomer", fields: [shipToCustomerId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   shipToCustomerTaxProfileId BigInt?
   shipToCustomerTaxProfile   CustomerTaxProfile? @relation("ShipToCustomerTaxProfile", fields: [shipToCustomerTaxProfileId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   // Valuta & totali
-  currency   String   @default("EUR")
-  subtotal   Decimal  @db.Decimal(18, 4)
-  taxTotal   Decimal  @db.Decimal(18, 4)
-  grandTotal Decimal  @db.Decimal(18, 4)
+  currency   String  @default("EUR")
+  subtotal   Decimal @db.Decimal(18, 4)
+  taxTotal   Decimal @db.Decimal(18, 4)
+  grandTotal Decimal @db.Decimal(18, 4)
 
   // Pagamento
   paymentMethod PaymentMethod @default(BANK_TRANSFER)
 
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   InvoiceItem InvoiceItem[]
   UserInvoice UserInvoice[]
 }
 
 model InvoiceItem {
-  id         BigInt   @id @default(autoincrement()) @map("invoice_item_id")
-  invoiceId  BigInt   @map("invoice_id") @unique
-  invoice    Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  id        BigInt  @id @default(autoincrement()) @map("invoice_item_id")
+  invoiceId BigInt  @unique @map("invoice_id")
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
-  codProduct String?
+  codProduct  String?
   description String
-  quantity   Decimal @db.Decimal(18, 4)
-  unitPrice  Decimal @db.Decimal(18, 4)
-  taxRate    Decimal @db.Decimal(5, 2) // es. 22.00 = 22%
-  lineTotal  Decimal @db.Decimal(18, 4)
+  quantity    Decimal @db.Decimal(18, 4)
+  unitPrice   Decimal @db.Decimal(18, 4)
+  taxRate     Decimal @db.Decimal(5, 2) // es. 22.00 = 22%
+  lineTotal   Decimal @db.Decimal(18, 4)
 
   @@index([invoiceId])
 }
 
 model UserInvoice {
-  id           BigInt   @id @default(autoincrement()) @map("user_invoice_id")
-  userId       BigInt   @map("user_id")
-  invoiceId    BigInt   @map("invoice_id")
-  dateLinked   DateTime @default(now()) @map("date_link")
-  firstView    DateTime? @map("first_view")
-  lastView     DateTime? @map("last_view")
+  id         BigInt    @id @default(autoincrement()) @map("user_invoice_id")
+  userId     BigInt    @map("user_id")
+  invoiceId  BigInt    @map("invoice_id")
+  dateLinked DateTime  @default(now()) @map("date_link")
+  firstView  DateTime? @map("first_view")
+  lastView   DateTime? @map("last_view")
 
-  user         User     @relation(fields: [userId], references: [id])
-  invoice      Invoice  @relation(fields: [invoiceId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
 
   @@unique([userId, invoiceId], name: "user_invoice_unique_id")
 }
@@ -200,7 +195,3 @@ enum PaymentMethod {
   CASH
   OTHER
 }
-/// ===== End of file =====
-
-
-

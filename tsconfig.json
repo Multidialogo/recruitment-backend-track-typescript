@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "Nodenext",
     "rootDir": "./src",
     "outDir": "./dist",
 
@@ -14,7 +14,6 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "verbatimModuleSyntax": true,
     "isolatedModules": true
   },
   "include": ["src/**/*.ts"]

@@ -1,18 +1,16 @@
-version: "3"
-
 services:
   backend-node:
     build:
       context: .
-      target: ${BUILD_TARGET:-development}   # scegli: development o production
+      target: ${BUILD_TARGET:-development}
     container_name: backend-node
     volumes:
-      - .:/app           # solo in dev per hot-reload
+      - .:/app
       - /app/node_modules
-    ports:
-      - "3000:3000"    
-    environment:
-      - NODE_ENV=development
+    expose:
+      - "3000"  
+    env_file:
+      - ./.env.prod
     depends_on:
       - db
 
@@ -31,23 +29,21 @@ services:
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: 
-      
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: invoice_management
     volumes:
       - dbdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
     restart: always
 
 
   nginx:
-    build:
-      context: .
+    image: nginx:alpine
     container_name: nginx
     depends_on:
       - backend-node
     ports:
-      - "8080:80" 
+      - "8080:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
     restart: always
