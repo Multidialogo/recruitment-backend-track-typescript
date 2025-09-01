@@ -37,7 +37,11 @@ Come avviare l’app su Docker (multistage)
 Il progetto utilizza un Dockerfile multistage con due target:
 
 - Development
-docker compose --env-file ./.env up -d --build
+docker compose -d --build
 
 - Production
-BUILD_TARGET=production docker compose --env-file ./.env.prod up -d --build
+BUILD_TARGET=production docker compose up -d --build
+
+
+SWAGGER => http://localhost:8080/swagger-ui/#/
+API DOC => http://localhost:8080/swagger-ui.json
