@@ -1,12 +1,43 @@
-# recruitment-backend-track-typescript
-An evaluation exercise for candidates willing to test their back-end capabilities. Typescript language track
+Come avviare l’applicazione
+
+1. Alza i servizi base (DB, Adminer se presente)
+docker compose up -d
+
+2. Installa le dipendenze e genera Prisma Client
+npm ci
+npm run prisma:generate
+
+3. Applica le migrazioni e seed, poi builda
+npm run prisma:migrate
+npm run prisma:seed
+npm run build
+
+4. Avvia l’API in modalità watch
+npm run dev
+
+5. Verifica
+
+API → http://localhost:3000
+Swagger UI → http://localhost:3000/swagger-ui
+Adminer (se presente) → http://localhost:8081
 
 
-1). come avviare il docker
-Il progetto utilizza un Dockerfile multistage con due sezioni:
-- development
-- production
-comandi:
-- docker compose up --build => per creare il container sfruttando l'immagine development lanciare il comando
+Come effettuare i test (con DB di test)
+1. Avvia il DB di test
+docker compose -f docker-compose-test.yml up -d
 
-- BUILD_TARGET=production docker compose up --build -d => per creare il container sfruttando l'immagine di produzione. se la variabile BUILD_TARGET non viene valorizzata, di default viene passato "development".
+2. Genera Prisma Client e applica le migrazioni sul DB di test
+npm run prisma:generate:test
+npm run prisma:migrate:test
+
+3. Lancia i test
+npm test
+
+Come avviare l’app su Docker (multistage)
+Il progetto utilizza un Dockerfile multistage con due target:
+
+- Development
+docker compose --env-file ./.env up -d --build
+
+- Production
+BUILD_TARGET=production docker compose --env-file ./.env.prod up -d --build

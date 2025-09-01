@@ -12,17 +12,24 @@ import type { User } from "@prisma/client";
 import type { PatchUserDto , AdminPutUserDto, UserFilter} from "../shared/dto/user.type.dto";
 import { BadRequestError, ConflictError, NotFoundError } from "../error/http-errors";
 import { UserService } from "./interface/user.service";
+import {logger} from "../shared/logger";
+ 
 
 export class UserServiceImpl implements UserService {
+
   constructor(private  repository = new UserRepositoryImpl()) {}
+
+  private log = logger.child({ module: "UserServiceImpl" });
+
 
   getAllUsers = async (
     userData: UserFilter,
     page: PageParameter,
     pageSize: PageSizeParameter
   ): Promise<PaginatedUsers> => {
+    this.log.debug("repository findAll...");
     const pageResult = await this.repository.findAll(userData, page, pageSize);
-
+    this.log.debug("repository findAll OK"); 
     return {
       ...pageResult,
       data: pageResult.data.map((user) => UserMapper.fromEntitytoUserResponse(user)),
@@ -31,7 +38,11 @@ export class UserServiceImpl implements UserService {
 
   getUserById = async (id: bigint): Promise<UserResponse> => {
     const user = await this.repository.findById(id);
-    if (!user) throw new NotFoundError("User not found", "id => " + id.toString() );
+    this.log.debug("findById OK");
+    if (!user) { 
+      this.log.error("User Not Found, id =" + id  );
+      throw new NotFoundError("User not found", "id => " + id.toString() )
+    };
     return UserMapper.fromEntitytoUserResponse(user);
   };
 
@@ -39,6 +50,7 @@ export class UserServiceImpl implements UserService {
     const { email, password, firstName, lastName, role, phone } = input;
 
     if (!email?.trim() || !password?.trim()) {
+      this.log.error("Email and password are required. Email = " + email + "password = " + password );
       throw new BadRequestError("Email and Password are required");
     }
 
@@ -56,7 +68,10 @@ export class UserServiceImpl implements UserService {
 
   updateUser = async (id: bigint, input: AdminPutUserDto) : Promise<UserResponse> => {
     const currentUser = await this.repository.findById(id);
-    if (!currentUser) throw new NotFoundError("User not found", "id => " + id.toString() );
+    if (!currentUser) { 
+      this.log.error("User Not Found, id =" + id  );
+      throw new NotFoundError("User not found", "id => " + id.toString() )
+    };
 
     let passwordHash: string | undefined = undefined;
     if (input.password) {
@@ -77,8 +92,11 @@ export class UserServiceImpl implements UserService {
   
   patchUser = async (id: bigint, input: PatchUserDto) => {
     const currentUser = await this.repository.findById(id);
-    if (!currentUser) throw new NotFoundError("User not found", "id => " + id.toString());
-    if (Object.keys(input).length === 0) currentUser;
+    if (!currentUser) { 
+      this.log.error("User Not Found, id =" + id  );
+      throw new NotFoundError("User not found", "id => " + id.toString() )
+    };
+        if (Object.keys(input).length === 0) currentUser;
 
     const updated = await this.repository.updateById(
       UserMapper.createPatchUserDto(input, currentUser)
@@ -90,12 +108,18 @@ export class UserServiceImpl implements UserService {
 
   deleteUser = async (id: bigint): Promise<void> => {
     const currentUser = await this.repository.findById(id);
-    if (!currentUser) throw new NotFoundError("User not found", "id => " + id.toString() );
+    if (!currentUser) { 
+      this.log.error("User Not Found, id =" + id  );
+      throw new NotFoundError("User not found", "id => " + id.toString() )
+    };
     await this.repository.deleteById(id);
   }
 
   private checkEmailExists = async (email: string): Promise<void> => {
     const existing = await this.repository.findByEmailRaw(email);
-    if (existing) new ConflictError("Email already in use", "email => " + email );
+    if (existing) { 
+      this.log.error("Email already in use");
+      new ConflictError("Email already in use", "email => " + email );
+    };
   }
 }

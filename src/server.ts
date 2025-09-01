@@ -3,8 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import fs from "fs";
 import YAML from "yaml";
 import * as OpenApiValidator from "express-openapi-validator";
-import pino from "pino";
-import pinoHttp from "pino-http";
+import { httpLogger } from "./shared/logger";
 import { buildUserRouter } from "./route/user.route.js";
 import authRouter from "./route/auth.route.js";
 import path from "path";
@@ -14,19 +13,16 @@ const app = express();
 const openapiPath = path.join(__dirname, 'config', 'openapi', 'invoice-management-v1.yaml');
 const specText = fs.readFileSync(openapiPath, "utf8");
 const openapiDoc = YAML.parse(specText);
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-});
 const port = process.env.PORT || 3000;
 
 
 // Middleware base
 app.use(express.json());
-// Log HTTP (aggiunge req.log)
-app.use(pinoHttp({ logger }));
 
+app.use(httpLogger);
 
 app.use("/swagger-ui", swaggerUi.serve, swaggerUi.setup(openapiDoc, { explorer: true }));
+
 app.get("/swagger-ui.json", (_req, res) => res.json(openapiDoc));
 
 app.use(

@@ -494,7 +494,6 @@ components:
       properties:
         firstName: { type: string}
         lastName: { type: string }
-        email: { type: string, format: email }
         phone: { type: string, nullable: true }
 
 

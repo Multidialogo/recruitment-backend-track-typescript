@@ -32,7 +32,3 @@ RUN npm install --only=production
 COPY --from=build /app/dist ./dist
 EXPOSE 3000
 CMD ["npm", "start"]
-
-
-FROM nginx
-COPY ./nginx.conf /etc/nginx/conf.d/nginx.conf

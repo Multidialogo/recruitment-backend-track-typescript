@@ -58,11 +58,11 @@ export class UserMapper extends SharedMapper {
   static createAdminPutUserDto = (input : AdminPutUserDto, currentUser: User, passwordHash: string | undefined) => {
     return {
           id: currentUser.id,
-          email: input.email ?? currentUser.email,
-          passwordHash: passwordHash ?? currentUser.passwordHash,
-          phone: input.phone ?? currentUser.phone,
-          firstName: input.firstName ?? currentUser.firstName,
-          lastName: input.lastName ?? currentUser.lastName,
+          email: input.email,
+          passwordHash: passwordHash,
+          phone: input.phone == null || input.phone === ''? currentUser.phone: input.phone,
+          firstName: input.firstName == null || input.firstName === '' ? currentUser.firstName : input.firstName,
+          lastName: input.lastName == null || input.lastName === '' ? currentUser.lastName : input.lastName,
           role: input.role ?? currentUser.role,
           isEnabled: input.isEnabled ?? currentUser.isEnabled,
         } as Partial<User>
@@ -71,16 +71,10 @@ export class UserMapper extends SharedMapper {
 
     static createPatchUserDto = (input : PatchUserDto, currentUser: User) => {
     return {
-          id: currentUser.id,
-          phone: input.phone ?? currentUser.phone,
-          firstName: input.firstName ?? currentUser.firstName,
-          lastName: input.lastName ?? currentUser.lastName,
-        } as Partial<User>
+      id: currentUser.id,
+      phone: input.phone == null || input.phone === ''? currentUser.phone: input.phone,
+      firstName: input.firstName == null || input.firstName === '' ? currentUser.firstName : input.firstName,
+      lastName: input.lastName == null || input.lastName === '' ? currentUser.lastName : input.lastName} as Partial<User>
   }  
 
-  private static parseBooleanQueryParam = (val: any): boolean | undefined => {
-    const v = val.toLowerCase().trim();
-    if (v === "true") return true;
-    if (v === "false") return false;
-  };
 }

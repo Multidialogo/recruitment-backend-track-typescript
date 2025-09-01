@@ -41,8 +41,7 @@ const swagger_ui_express_1 = __importDefault(require("swagger-ui-express"));
 const fs_1 = __importDefault(require("fs"));
 const yaml_1 = __importDefault(require("yaml"));
 const OpenApiValidator = __importStar(require("express-openapi-validator"));
-const pino_1 = __importDefault(require("pino"));
-const pino_http_1 = __importDefault(require("pino-http"));
+const logger_1 = require("./shared/logger");
 const user_route_js_1 = require("./route/user.route.js");
 const auth_route_js_1 = __importDefault(require("./route/auth.route.js"));
 const path_1 = __importDefault(require("path"));
@@ -50,14 +49,10 @@ const app = (0, express_1.default)();
 const openapiPath = path_1.default.join(__dirname, 'config', 'openapi', 'invoice-management-v1.yaml');
 const specText = fs_1.default.readFileSync(openapiPath, "utf8");
 const openapiDoc = yaml_1.default.parse(specText);
-const logger = (0, pino_1.default)({
-    level: process.env.LOG_LEVEL || 'info',
-});
 const port = process.env.PORT || 3000;
 // Middleware base
 app.use(express_1.default.json());
-// Log HTTP (aggiunge req.log)
-app.use((0, pino_http_1.default)({ logger }));
+app.use(logger_1.httpLogger);
 app.use("/swagger-ui", swagger_ui_express_1.default.serve, swagger_ui_express_1.default.setup(openapiDoc, { explorer: true }));
 app.get("/swagger-ui.json", (_req, res) => res.json(openapiDoc));
 app.use(OpenApiValidator.middleware({
