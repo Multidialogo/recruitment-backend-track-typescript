@@ -1,7 +1,7 @@
 # Instructions for Candidates
 
 ## Submission Process
-Candidates must **fork** the repository and, once they have completed their work, submit the link to their forked repository via email to their recruitment contact.
+Candidates must **fork** the repository (notice that this will make it public) and, once they have completed their work, submit the link to their forked repository via email to their recruitment contact.
 
 ## Questions and Clarifications
 Any questions or clarifications must be submitted by opening an issue on this repository or with an email to desantis@multicerta.it.
